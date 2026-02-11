@@ -1,19 +1,40 @@
 /* ================================================= */
-/* 1. 전체 컨테이너 (펼쳐진 상태) - 기존과 비슷 */
+/* 1. 전체를 감싸는 투명 컨테이너 (위치 담당) */
 /* ================================================= */
-#ai-chapter-nav {
+#ai-widget-wrapper {
   position: fixed;
   top: 80px;
   right: 20px;
-  width: 220px !important;
+  width: 220px; /* 펼쳐진 상태 너비 */
+  z-index: 99999;
+  
+  /* 내부 요소 정렬 */
+  display: flex;
+  flex-direction: column; /* 위아래로 배치 */
+  align-items: center;    /* 가운데 정렬 */
+  
+  /* 너비 애니메이션 */
+  transition: width 0.3s ease;
+}
+
+/* 접혔을 때 컨테이너 너비 줄임 */
+#ai-widget-wrapper.wrapper-collapsed {
+  width: 70px !important;
+}
+
+/* ================================================= */
+/* 2. 목차 상자 (디자인 담당) */
+/* ================================================= */
+#ai-chapter-nav {
+  /* position: fixed 삭제됨 (부모가 위치 잡음) */
+  width: 100%;
+  
   background: white;
   border: 1px solid #ddd;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  z-index: 99999;
-  font-family: "Malgun Gothic", sans-serif; /* 한글 폰트 지정 */
+  font-family: "Malgun Gothic", sans-serif;
   overflow: hidden;
-  transition: all 0.3s ease; /* 부드러운 변환 */
   box-sizing: border-box;
 }
 
@@ -30,20 +51,16 @@
   justify-content: space-between;
   align-items: center;
   user-select: none;
-  height: 40px; /* 높이 고정 */
-  box-sizing: border-box;
+  height: 25px;
 }
 
-#ai-chapter-header:hover {
-  background: #f0f0f0;
-}
+#ai-chapter-header:hover { background: #f0f0f0; }
 
 /* 목록 영역 */
 #ai-chapter-list {
   max-height: 60vh;
   overflow-y: auto;
   padding: 5px;
-  opacity: 1;
 }
 
 /* 버튼 스타일 */
@@ -62,52 +79,47 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.chapter-btn:hover {
-  background-color: #f0f0f0;
-}
+.chapter-btn:hover { background-color: #f0f0f0; }
 
 /* ================================================= */
-/* 2. 접혔을 때 (작은 사각형 버튼) - 핵심 변경 사항 */
+/* 3. 접혔을 때 스타일 (.nav-collapsed -> 상자만 담당) */
 /* ================================================= */
-
 .nav-collapsed {
-  /* ▼ 크기 및 모양 설정 */
-  width: 180px !important;   /* 너비를 글자에 딱 맞게 작게 */
-  height: 30px !important;  /* 높이도 슬림하게 */
-  border-radius: 4px !important; /* 약간 둥근 사각형 */
-
-  top: 80px !important;  /* 원래(80px)보다 더 아래로 내림 */
-  right: 10px !important; /* 우측 여백은 그대로 유지 */
-  
-  /* 테두리 및 그림자 */
-  border-color: #ccc;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  height: 30px !important; /* 헤더 높이만 남김 */
+  border-radius: 4px;
 }
 
-/* 접혔을 때 목록 숨김 */
-.nav-collapsed #ai-chapter-list {
-  display: none;
-}
+.nav-collapsed #ai-chapter-list { display: none; }
 
-/* 접혔을 때 헤더 스타일 변경 */
 .nav-collapsed #ai-chapter-header {
   border-bottom: none;
   background: white;
-  justify-content: center; /* 글자 가운데 정렬 */
+  justify-content: center;
   padding: 0;
-  height: 100%; /* 부모 높이에 맞춤 */
 }
 
-/* 접혔을 때 글자 스타일 (작게) */
-.nav-collapsed #header-title {
-  font-size: 11px; /* 글자 크기 축소 */
-  color: #666;
+.nav-collapsed #header-title { font-size: 11px; color: #666; }
+.nav-collapsed #toggle-icon { display: none; }
+
+/* ================================================= */
+/* 4. 맨 아래로 가기 버튼 (상자 바로 아래) */
+/* ================================================= */
+#go-to-bottom-btn {
+  margin-top: 4px; /* 상자와의 간격 */
+  
+  background: none;
+  border: none;
+  font-size: 13px; /* 역삼각형 크기 */
+  color: #bbb;     /* 연한 회색 */
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: all 0.2s;
 }
 
-/* 접혔을 때 화살표(▼) 숨기기 (공간 확보를 위해) */
-.nav-collapsed #toggle-icon {
-  display: none;
+#go-to-bottom-btn:hover {
+  color: #555; /* 진한 회색 */
+  transform: translateY(2px);
 }
 
 /* 다크 모드 */
@@ -118,4 +130,6 @@
   .nav-collapsed #header-title { color: #ccc; }
   .chapter-btn { color: #ccc; }
   .chapter-btn:hover { background-color: #333; }
+  #go-to-bottom-btn { color: #666; }
+  #go-to-bottom-btn:hover { color: #ccc; }
 }

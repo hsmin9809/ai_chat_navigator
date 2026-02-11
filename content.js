@@ -31,17 +31,21 @@ function getSelector() {
   if (host.includes('perplexity')) return SITE_CONFIG['www.perplexity.ai'].selector;
   return null;
 }
-function createSidebar() {
-  if (document.getElementById('ai-chapter-nav')) return; 
 
+function createSidebar() {
+  if (document.getElementById('ai-widget-wrapper')) return; 
+
+  // 1. 전체 래퍼
+  const wrapper = document.createElement('div');
+  wrapper.id = 'ai-widget-wrapper';
+
+  // 2. 목차 박스
   const nav = document.createElement('div');
   nav.id = 'ai-chapter-nav';
 
-  // 헤더 생성
+  // 헤더
   const header = document.createElement('div');
   header.id = 'ai-chapter-header';
-  
-  // HTML 구조: 제목과 아이콘
   header.innerHTML = `
     <span id="header-title">질문 목차</span>
     <span id="toggle-icon">▼</span>
@@ -52,14 +56,52 @@ function createSidebar() {
 
   nav.appendChild(header);
   nav.appendChild(list);
-  document.body.appendChild(nav);
+
+  // 3. 맨 아래로 가기 버튼 생성
+  const bottomBtn = document.createElement('button');
+  bottomBtn.id = 'go-to-bottom-btn';
+  bottomBtn.innerText = '▼';
+  
+  // [수정된 로직] "채팅 질문의 진짜 부모(스크롤 영역)"를 찾아서 내리기
+  bottomBtn.onclick = () => {
+    // 1. 현재 화면에 있는 질문들을 가져옴
+    const selector = getSelector();
+    const questions = document.querySelectorAll(selector);
+
+    // 2. 질문이 하나라도 있다면, 그 질문을 감싸고 있는 스크롤 영역을 찾음
+    if (questions.length > 0) {
+      // 가장 최근 질문(마지막 질문)부터 시작
+      let targetElement = questions[questions.length - 1];
+      
+      // 부모를 타고 올라가면서 스크롤 가능한 요소를 찾음 (최대 10단계 위까지)
+      while (targetElement && targetElement !== document.body) {
+        const style = window.getComputedStyle(targetElement);
+        const overflowY = style.overflowY;
+        
+        // "스크롤이 auto거나 scroll"이고 && "실제 내용이 화면보다 길다면" -> 이게 범인이다!
+        if ((overflowY === 'auto' || overflowY === 'scroll') && targetElement.scrollHeight > targetElement.clientHeight) {
+          targetElement.scrollTo({ top: targetElement.scrollHeight, behavior: 'smooth' });
+          return; // 찾았으니 스크롤 내리고 종료
+        }
+        
+        // 아니면 한 단계 더 위 부모로 이동
+        targetElement = targetElement.parentElement;
+      }
+    }
+
+    // 3. 만약 위에서 못 찾았다면 (혹은 질문이 없다면), 최후의 수단으로 전체 창(Window)을 내림
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  };
+
+  wrapper.appendChild(nav);
+  wrapper.appendChild(bottomBtn);
+  document.body.appendChild(wrapper);
 
   // 토글 기능
   header.onclick = () => {
-    // 클래스 토글 (CSS가 알아서 모양을 바꿈)
     nav.classList.toggle('nav-collapsed');
+    wrapper.classList.toggle('wrapper-collapsed');
     
-    // (선택 사항) 펼쳐질 때 화살표 방향 확실하게 리셋
     const icon = document.getElementById('toggle-icon');
     if (!nav.classList.contains('nav-collapsed')) {
       icon.innerText = '▼'; 
@@ -77,18 +119,11 @@ function updateChapters() {
   
   if (!list) return;
 
-  // [핵심 최적화]
-  // 현재 화면에 표시된 버튼 개수와, 실제 질문 개수가 같다면
-  // 아무것도 하지 않고 함수를 종료합니다. (여기서 99%의 부하가 사라짐)
   if (questions.length === list.children.length) {
-    // 단, 질문이 하나도 없는데 사이드바가 켜져있으면 숨김 처리
     if (questions.length === 0) nav.style.display = 'none';
     return; 
   }
 
-  // 개수가 다를 때만 아래 로직(렌더링)을 실행합니다.
-  
-  // 스크롤 위치 저장
   const currentScroll = list.scrollTop;
 
   if (questions.length === 0) {
@@ -97,7 +132,7 @@ function updateChapters() {
   }
   nav.style.display = 'block';
 
-  list.innerHTML = ''; // 목록 초기화
+  list.innerHTML = '';
 
   questions.forEach((q, index) => {
     const btn = document.createElement('button');
@@ -123,20 +158,18 @@ function updateChapters() {
     list.appendChild(btn);
   });
 
-  // 스크롤 복구
   requestAnimationFrame(() => {
     list.scrollTop = currentScroll;
   });
 }
 
-// DOM 변경 감지
 const observer = new MutationObserver(() => {
- clearTimeout(debounceTimer);
- debounceTimer = setTimeout(updateChapters, 500);
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(updateChapters, 500);
 });
 
 window.onload = () => {
- createSidebar();
- updateChapters();
- observer.observe(document.body, { childList: true, subtree: true });
+  createSidebar();
+  updateChapters();
+  observer.observe(document.body, { childList: true, subtree: true });
 };
