@@ -31,26 +31,52 @@ function getSelector() {
   if (host.includes('perplexity')) return SITE_CONFIG['www.perplexity.ai'].selector;
   return null;
 }
-
 function createSidebar() {
-  if (document.getElementById('ai-chapter-nav')) return; // 이미 있으면 생성 안함
+  if (document.getElementById('ai-chapter-nav')) return; 
 
   const nav = document.createElement('div');
   nav.id = 'ai-chapter-nav';
+
+  // 헤더 생성
+  const header = document.createElement('div');
+  header.id = 'ai-chapter-header';
+  
+  // HTML 구조: 제목과 아이콘
+  header.innerHTML = `
+    <span id="header-title">질문 목차</span>
+    <span id="toggle-icon">▼</span>
+  `;
+  
+  const list = document.createElement('div');
+  list.id = 'ai-chapter-list';
+
+  nav.appendChild(header);
+  nav.appendChild(list);
   document.body.appendChild(nav);
+
+  // 토글 기능
+  header.onclick = () => {
+    // 클래스 토글 (CSS가 알아서 모양을 바꿈)
+    nav.classList.toggle('nav-collapsed');
+    
+    // (선택 사항) 펼쳐질 때 화살표 방향 확실하게 리셋
+    const icon = document.getElementById('toggle-icon');
+    if (!nav.classList.contains('nav-collapsed')) {
+      icon.innerText = '▼'; 
+    }
+  };
 }
 
 function updateChapters() {
   const selector = getSelector();
   if (!selector) return;
 
-  // 수정된 선택자로 요소들 가져오기 (이제 덩어리로 가져옵니다)
+  // 수정된 선택자로 요소들 가져오기
   const questions = document.querySelectorAll(selector);
+  const list = document.getElementById('ai-chapter-list');
   const nav = document.getElementById('ai-chapter-nav');
-   
-  if (!nav) return;
-
-  nav.innerHTML = ''; // 목록 초기화
+  
+  if (!list) return;
 
   // 질문이 없으면 사이드바 숨김
   if (questions.length === 0) {
@@ -59,48 +85,47 @@ function updateChapters() {
   }
   nav.style.display = 'block';
 
-  questions.forEach((q, index) => {
-    const btn = document.createElement('button');
-    btn.className = 'chapter-btn';
-    
-    // [텍스트 정제 로직 강화]
-    // 1. innerText로 전체 텍스트를 가져옴
-    // 2. replace(/\s+/g, ' '): 줄바꿈(\n)과 여러 공백을 스페이스 하나로 통일
-    const rawText = q.innerText || ""; 
-    const cleanText = rawText.replace(/\s+/g, ' ').trim(); 
-    
-    // 30자 이상이면 ... 처리
-    btn.innerText = `${index + 1}. ${cleanText.substring(0, 30)}${cleanText.length > 30 ? '...' : ''}`;
-    
-    btn.onclick = () => {
-      // 부드럽게 스크롤 이동
-      q.scrollIntoView({ behavior: 'smooth', block: 'center' });
-       
-      // 강조 효과 (선택 시 깜빡임)
-      q.style.transition = 'background 0.5s';
-      const originalBg = q.style.backgroundColor;
-      // 노란색 하이라이트 효과
-      q.style.backgroundColor = 'rgba(255, 235, 59, 0.3)'; 
-      setTimeout(() => {
-        q.style.backgroundColor = originalBg;
-      }, 1000);
-    };
+ // 기존 목록 비우기 (중복 방지)
+ list.innerHTML = '';
 
-    nav.appendChild(btn);
-  });
+ questions.forEach((q, index) => {
+   const btn = document.createElement('button');
+   btn.className = 'chapter-btn';
+   
+   // 텍스트 정제
+   const rawText = q.innerText || ""; 
+   const cleanText = rawText.replace(/\s+/g, ' ').trim(); 
+   
+   // 30자 이상이면 ... 처리
+   btn.innerText = `${index + 1}. ${cleanText.substring(0, 30)}${cleanText.length > 30 ? '...' : ''}`;
+   
+   btn.onclick = (e) => {
+     // 이벤트 버블링 방지 (헤더 클릭과 겹치지 않게)
+     e.stopPropagation();
+     
+     q.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+     // 강조 효과
+     q.style.transition = 'background 0.5s';
+     const originalBg = q.style.backgroundColor;
+     q.style.backgroundColor = 'rgba(255, 235, 59, 0.3)'; 
+     setTimeout(() => {
+       q.style.backgroundColor = originalBg;
+     }, 1000);
+   };
+
+   list.appendChild(btn);
+ });
 }
 
-// DOM 변경 감지 (채팅이 추가될 때마다 실행)
+// DOM 변경 감지
 const observer = new MutationObserver(() => {
-  // 너무 잦은 실행 방지 (Debounce)
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(updateChapters, 500);
+ clearTimeout(debounceTimer);
+ debounceTimer = setTimeout(updateChapters, 500);
 });
 
-// 초기 실행
 window.onload = () => {
-  createSidebar();
-  updateChapters();
-  // 페이지 전체 감시 시작
-  observer.observe(document.body, { childList: true, subtree: true });
+ createSidebar();
+ updateChapters();
+ observer.observe(document.body, { childList: true, subtree: true });
 };
