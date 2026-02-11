@@ -71,51 +71,56 @@ function updateChapters() {
   const selector = getSelector();
   if (!selector) return;
 
-  // 수정된 선택자로 요소들 가져오기
+  // 질문 요소들 가져오기
   const questions = document.querySelectorAll(selector);
   const list = document.getElementById('ai-chapter-list');
   const nav = document.getElementById('ai-chapter-nav');
   
   if (!list) return;
 
-  // 질문이 없으면 사이드바 숨김
+  // [핵심 해결책 1] 목록을 지우기 전에 현재 스크롤 위치를 저장합니다.
+  const currentScroll = list.scrollTop;
+
   if (questions.length === 0) {
     nav.style.display = 'none';
     return;
   }
   nav.style.display = 'block';
 
- // 기존 목록 비우기 (중복 방지)
- list.innerHTML = '';
+  // 목록 초기화 (여기서 스크롤이 0이 되어버림)
+  list.innerHTML = '';
 
- questions.forEach((q, index) => {
-   const btn = document.createElement('button');
-   btn.className = 'chapter-btn';
-   
-   // 텍스트 정제
-   const rawText = q.innerText || ""; 
-   const cleanText = rawText.replace(/\s+/g, ' ').trim(); 
-   
-   // 30자 이상이면 ... 처리
-   btn.innerText = `${index + 1}. ${cleanText.substring(0, 30)}${cleanText.length > 30 ? '...' : ''}`;
-   
-   btn.onclick = (e) => {
-     // 이벤트 버블링 방지 (헤더 클릭과 겹치지 않게)
-     e.stopPropagation();
-     
-     q.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
-     // 강조 효과
-     q.style.transition = 'background 0.5s';
-     const originalBg = q.style.backgroundColor;
-     q.style.backgroundColor = 'rgba(255, 235, 59, 0.3)'; 
-     setTimeout(() => {
-       q.style.backgroundColor = originalBg;
-     }, 1000);
-   };
+  questions.forEach((q, index) => {
+    const btn = document.createElement('button');
+    btn.className = 'chapter-btn';
+    
+    // 텍스트 정제
+    const rawText = q.innerText || ""; 
+    const cleanText = rawText.replace(/\s+/g, ' ').trim(); 
+    
+    // 30자 제한
+    btn.innerText = `${index + 1}. ${cleanText.substring(0, 30)}${cleanText.length > 30 ? '...' : ''}`;
+    
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      q.scrollIntoView({ behavior: 'smooth', block: 'center' });
+       
+      q.style.transition = 'background 0.5s';
+      const originalBg = q.style.backgroundColor;
+      q.style.backgroundColor = 'rgba(255, 235, 59, 0.3)'; 
+      setTimeout(() => {
+        q.style.backgroundColor = originalBg;
+      }, 1000);
+    };
 
-   list.appendChild(btn);
- });
+    list.appendChild(btn);
+  });
+
+  // [핵심 해결책 2] 목록을 다 그린 뒤, 아까 저장한 스크롤 위치로 복구합니다.
+  // requestAnimationFrame을 사용하면 화면 깜빡임 없이 더 부드럽게 복구됩니다.
+  requestAnimationFrame(() => {
+    list.scrollTop = currentScroll;
+  });
 }
 
 // DOM 변경 감지
