@@ -51,7 +51,7 @@
   justify-content: space-between;
   align-items: center;
   user-select: none;
-  height: 30px;
+  height: 25px;
 }
 
 #ai-chapter-header:hover { background: #f0f0f0; }
