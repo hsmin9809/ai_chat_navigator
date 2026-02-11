@@ -31,37 +31,39 @@ function getSelector() {
   if (host.includes('perplexity')) return SITE_CONFIG['www.perplexity.ai'].selector;
   return null;
 }
-
 function createSidebar() {
   if (document.getElementById('ai-chapter-nav')) return; 
 
-  // 1. 전체 컨테이너 생성
   const nav = document.createElement('div');
   nav.id = 'ai-chapter-nav';
 
-  // 2. 헤더 (접기/펼치기 버튼 역할) 생성
+  // 헤더 생성
   const header = document.createElement('div');
   header.id = 'ai-chapter-header';
+  
+  // HTML 구조: 제목과 아이콘
   header.innerHTML = `
-    <span>💬 질문 목차</span>
+    <span id="header-title">질문 목차</span>
     <span id="toggle-icon">▼</span>
   `;
   
-  // 3. 목록 영역 생성
   const list = document.createElement('div');
   list.id = 'ai-chapter-list';
 
-  // 4. 조립
   nav.appendChild(header);
   nav.appendChild(list);
   document.body.appendChild(nav);
 
-  // 5. 클릭 이벤트 (접기/펼치기 기능)
+  // 토글 기능
   header.onclick = () => {
+    // 클래스 토글 (CSS가 알아서 모양을 바꿈)
     nav.classList.toggle('nav-collapsed');
+    
+    // (선택 사항) 펼쳐질 때 화살표 방향 확실하게 리셋
     const icon = document.getElementById('toggle-icon');
-    // 접혀있으면(nav-collapsed 클래스 있으면) 아이콘 변경
-    icon.innerText = nav.classList.contains('nav-collapsed') ? '▲' : '▼';
+    if (!nav.classList.contains('nav-collapsed')) {
+      icon.innerText = '▼'; 
+    }
   };
 }
 
