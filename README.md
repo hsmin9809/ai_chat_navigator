@@ -1,2 +1,2 @@
 # ai_chat_navigator
-generate contents of questions
+generate contents of questions for chrome extentions
