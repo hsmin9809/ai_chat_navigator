@@ -8,7 +8,7 @@ const SITE_CONFIG = {
   'gemini.google.com': {
     // Gemini: 사용자 아이콘이나 특정 클래스 구조에 의존 (가변적임)
     // 현재 예시: user-query 관련 클래스 혹은 텍스트 컨테이너
-    selector: '.query-text-line.ng-star-inserted'
+    selector: '.query-text'
     // 참고: Gemini는 구조가 복잡하여 정확한 선택자를 찾기 위해 개발자 도구 확인 필요
   },
   'claude.ai': {
@@ -25,7 +25,6 @@ let debounceTimer = null;
 
 function getSelector() {
   const host = window.location.hostname;
-  // 서브도메인 처리 등 유연성 확보
   if (host.includes('chatgpt')) return SITE_CONFIG['chatgpt.com'].selector;
   if (host.includes('gemini')) return SITE_CONFIG['gemini.google.com'].selector;
   if (host.includes('claude')) return SITE_CONFIG['claude.ai'].selector;
@@ -45,15 +44,17 @@ function updateChapters() {
   const selector = getSelector();
   if (!selector) return;
 
+  // 수정된 선택자로 요소들 가져오기 (이제 덩어리로 가져옵니다)
   const questions = document.querySelectorAll(selector);
   const nav = document.getElementById('ai-chapter-nav');
-  
+   
   if (!nav) return;
 
   nav.innerHTML = ''; // 목록 초기화
 
+  // 질문이 없으면 사이드바 숨김
   if (questions.length === 0) {
-    nav.style.display = 'none'; // 질문 없으면 숨김
+    nav.style.display = 'none';
     return;
   }
   nav.style.display = 'block';
@@ -62,18 +63,24 @@ function updateChapters() {
     const btn = document.createElement('button');
     btn.className = 'chapter-btn';
     
-    // 텍스트 추출 및 길이 제한 (30자)
-    const text = q.innerText.trim().replace(/\n/g, ' ');
-    btn.innerText = `${index + 1}. ${text.substring(0, 30)}${text.length > 30 ? '...' : ''}`;
+    // [텍스트 정제 로직 강화]
+    // 1. innerText로 전체 텍스트를 가져옴
+    // 2. replace(/\s+/g, ' '): 줄바꿈(\n)과 여러 공백을 스페이스 하나로 통일
+    const rawText = q.innerText || ""; 
+    const cleanText = rawText.replace(/\s+/g, ' ').trim(); 
+    
+    // 30자 이상이면 ... 처리
+    btn.innerText = `${index + 1}. ${cleanText.substring(0, 30)}${cleanText.length > 30 ? '...' : ''}`;
     
     btn.onclick = () => {
       // 부드럽게 스크롤 이동
       q.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
+       
       // 강조 효과 (선택 시 깜빡임)
       q.style.transition = 'background 0.5s';
       const originalBg = q.style.backgroundColor;
-      q.style.backgroundColor = 'rgba(255, 255, 0, 0.3)';
+      // 노란색 하이라이트 효과
+      q.style.backgroundColor = 'rgba(255, 235, 59, 0.3)'; 
       setTimeout(() => {
         q.style.backgroundColor = originalBg;
       }, 1000);
