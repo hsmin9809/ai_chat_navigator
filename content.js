@@ -31,17 +31,22 @@ function getSelector() {
   if (host.includes('perplexity')) return SITE_CONFIG['www.perplexity.ai'].selector;
   return null;
 }
-function createSidebar() {
-  if (document.getElementById('ai-chapter-nav')) return; 
 
+function createSidebar() {
+  // 이미 생성되었으면 중단
+  if (document.getElementById('ai-widget-wrapper')) return; 
+
+  // 1. 전체를 감싸는 포장지 (Wrapper) 생성
+  const wrapper = document.createElement('div');
+  wrapper.id = 'ai-widget-wrapper';
+
+  // 2. 목차 상자 (Nav) 생성
   const nav = document.createElement('div');
   nav.id = 'ai-chapter-nav';
 
   // 헤더 생성
   const header = document.createElement('div');
   header.id = 'ai-chapter-header';
-  
-  // HTML 구조: 제목과 아이콘
   header.innerHTML = `
     <span id="header-title">질문 목차</span>
     <span id="toggle-icon">▼</span>
@@ -50,16 +55,37 @@ function createSidebar() {
   const list = document.createElement('div');
   list.id = 'ai-chapter-list';
 
+  // 목차 상자 조립
   nav.appendChild(header);
   nav.appendChild(list);
-  document.body.appendChild(nav);
 
-  // 토글 기능
+  // 3. 맨 아래로 가기 버튼 생성 (역삼각형)
+  const bottomBtn = document.createElement('button');
+  bottomBtn.id = 'go-to-bottom-btn';
+  bottomBtn.innerText = '▼';
+  
+  bottomBtn.onclick = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth'
+    });
+  };
+
+  // 4. 최종 조립: 포장지 안에 [목차 상자] 넣고 그 아래에 [버튼] 넣기
+  wrapper.appendChild(nav);
+  wrapper.appendChild(bottomBtn);
+  
+  // 페이지에 추가
+  document.body.appendChild(wrapper);
+
+  // 5. 토글 기능 (포장지와 상자 모두에게 클래스 적용)
   header.onclick = () => {
-    // 클래스 토글 (CSS가 알아서 모양을 바꿈)
+    // 상자: 내용 숨기기
     nav.classList.toggle('nav-collapsed');
+    // 포장지: 너비 줄이기
+    wrapper.classList.toggle('wrapper-collapsed');
     
-    // (선택 사항) 펼쳐질 때 화살표 방향 확실하게 리셋
+    // 화살표 아이콘 복구 로직
     const icon = document.getElementById('toggle-icon');
     if (!nav.classList.contains('nav-collapsed')) {
       icon.innerText = '▼'; 
