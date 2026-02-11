@@ -105,11 +105,11 @@
 /* 4. 맨 아래로 가기 버튼 (상자 바로 아래) */
 /* ================================================= */
 #go-to-bottom-btn {
-  margin-top: 8px; /* 상자와의 간격 */
+  margin-top: 4px; /* 상자와의 간격 */
   
   background: none;
   border: none;
-  font-size: 20px; /* 역삼각형 크기 */
+  font-size: 13px; /* 역삼각형 크기 */
   color: #bbb;     /* 연한 회색 */
   cursor: pointer;
   padding: 0;
