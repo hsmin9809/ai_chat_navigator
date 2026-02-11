@@ -71,14 +71,24 @@ function updateChapters() {
   const selector = getSelector();
   if (!selector) return;
 
-  // 질문 요소들 가져오기
   const questions = document.querySelectorAll(selector);
   const list = document.getElementById('ai-chapter-list');
   const nav = document.getElementById('ai-chapter-nav');
   
   if (!list) return;
 
-  // [핵심 해결책 1] 목록을 지우기 전에 현재 스크롤 위치를 저장합니다.
+  // [핵심 최적화]
+  // 현재 화면에 표시된 버튼 개수와, 실제 질문 개수가 같다면
+  // 아무것도 하지 않고 함수를 종료합니다. (여기서 99%의 부하가 사라짐)
+  if (questions.length === list.children.length) {
+    // 단, 질문이 하나도 없는데 사이드바가 켜져있으면 숨김 처리
+    if (questions.length === 0) nav.style.display = 'none';
+    return; 
+  }
+
+  // 개수가 다를 때만 아래 로직(렌더링)을 실행합니다.
+  
+  // 스크롤 위치 저장
   const currentScroll = list.scrollTop;
 
   if (questions.length === 0) {
@@ -87,18 +97,15 @@ function updateChapters() {
   }
   nav.style.display = 'block';
 
-  // 목록 초기화 (여기서 스크롤이 0이 되어버림)
-  list.innerHTML = '';
+  list.innerHTML = ''; // 목록 초기화
 
   questions.forEach((q, index) => {
     const btn = document.createElement('button');
     btn.className = 'chapter-btn';
     
-    // 텍스트 정제
     const rawText = q.innerText || ""; 
     const cleanText = rawText.replace(/\s+/g, ' ').trim(); 
     
-    // 30자 제한
     btn.innerText = `${index + 1}. ${cleanText.substring(0, 30)}${cleanText.length > 30 ? '...' : ''}`;
     
     btn.onclick = (e) => {
@@ -116,8 +123,7 @@ function updateChapters() {
     list.appendChild(btn);
   });
 
-  // [핵심 해결책 2] 목록을 다 그린 뒤, 아까 저장한 스크롤 위치로 복구합니다.
-  // requestAnimationFrame을 사용하면 화면 깜빡임 없이 더 부드럽게 복구됩니다.
+  // 스크롤 복구
   requestAnimationFrame(() => {
     list.scrollTop = currentScroll;
   });
