@@ -71,51 +71,62 @@ function updateChapters() {
   const selector = getSelector();
   if (!selector) return;
 
-  // 수정된 선택자로 요소들 가져오기
   const questions = document.querySelectorAll(selector);
   const list = document.getElementById('ai-chapter-list');
   const nav = document.getElementById('ai-chapter-nav');
   
   if (!list) return;
 
-  // 질문이 없으면 사이드바 숨김
+  // [핵심 최적화]
+  // 현재 화면에 표시된 버튼 개수와, 실제 질문 개수가 같다면
+  // 아무것도 하지 않고 함수를 종료합니다. (여기서 99%의 부하가 사라짐)
+  if (questions.length === list.children.length) {
+    // 단, 질문이 하나도 없는데 사이드바가 켜져있으면 숨김 처리
+    if (questions.length === 0) nav.style.display = 'none';
+    return; 
+  }
+
+  // 개수가 다를 때만 아래 로직(렌더링)을 실행합니다.
+  
+  // 스크롤 위치 저장
+  const currentScroll = list.scrollTop;
+
   if (questions.length === 0) {
     nav.style.display = 'none';
     return;
   }
   nav.style.display = 'block';
 
- // 기존 목록 비우기 (중복 방지)
- list.innerHTML = '';
+  list.innerHTML = ''; // 목록 초기화
 
- questions.forEach((q, index) => {
-   const btn = document.createElement('button');
-   btn.className = 'chapter-btn';
-   
-   // 텍스트 정제
-   const rawText = q.innerText || ""; 
-   const cleanText = rawText.replace(/\s+/g, ' ').trim(); 
-   
-   // 30자 이상이면 ... 처리
-   btn.innerText = `${index + 1}. ${cleanText.substring(0, 30)}${cleanText.length > 30 ? '...' : ''}`;
-   
-   btn.onclick = (e) => {
-     // 이벤트 버블링 방지 (헤더 클릭과 겹치지 않게)
-     e.stopPropagation();
-     
-     q.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
-     // 강조 효과
-     q.style.transition = 'background 0.5s';
-     const originalBg = q.style.backgroundColor;
-     q.style.backgroundColor = 'rgba(255, 235, 59, 0.3)'; 
-     setTimeout(() => {
-       q.style.backgroundColor = originalBg;
-     }, 1000);
-   };
+  questions.forEach((q, index) => {
+    const btn = document.createElement('button');
+    btn.className = 'chapter-btn';
+    
+    const rawText = q.innerText || ""; 
+    const cleanText = rawText.replace(/\s+/g, ' ').trim(); 
+    
+    btn.innerText = `${index + 1}. ${cleanText.substring(0, 30)}${cleanText.length > 30 ? '...' : ''}`;
+    
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      q.scrollIntoView({ behavior: 'smooth', block: 'center' });
+       
+      q.style.transition = 'background 0.5s';
+      const originalBg = q.style.backgroundColor;
+      q.style.backgroundColor = 'rgba(255, 235, 59, 0.3)'; 
+      setTimeout(() => {
+        q.style.backgroundColor = originalBg;
+      }, 1000);
+    };
 
-   list.appendChild(btn);
- });
+    list.appendChild(btn);
+  });
+
+  // 스크롤 복구
+  requestAnimationFrame(() => {
+    list.scrollTop = currentScroll;
+  });
 }
 
 // DOM 변경 감지
