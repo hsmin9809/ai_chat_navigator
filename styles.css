@@ -51,7 +51,7 @@
   justify-content: space-between;
   align-items: center;
   user-select: none;
-  height: 25px;
+  height: 35px;
 }
 
 #ai-chapter-header:hover { background: #f0f0f0; }
@@ -85,7 +85,7 @@
 /* 3. 접혔을 때 스타일 (.nav-collapsed -> 상자만 담당) */
 /* ================================================= */
 .nav-collapsed {
-  height: 30px !important; /* 헤더 높이만 남김 */
+  height: 35px !important; /* 헤더 높이만 남김 */
   border-radius: 4px;
 }
 
