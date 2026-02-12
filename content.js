@@ -119,6 +119,7 @@ function updateChapters() {
   
   if (!list) return;
 
+  // 최적화: 개수가 같으면 렌더링 건너뜀
   if (questions.length === list.children.length) {
     if (questions.length === 0) nav.style.display = 'none';
     return; 
@@ -138,9 +139,17 @@ function updateChapters() {
     const btn = document.createElement('button');
     btn.className = 'chapter-btn';
     
+    // [수정 핵심] 텍스트 정제 로직 강화
     const rawText = q.innerText || ""; 
-    const cleanText = rawText.replace(/\s+/g, ' ').trim(); 
     
+    // 1. 줄바꿈을 공백으로 변경
+    let cleanText = rawText.replace(/\s+/g, ' ').trim(); 
+    
+    // 2. "You said", "You", "Question" 같은 불필요한 앞부분 제거 (대소문자 무시)
+    // 정규식 설명: 문장 시작(^)에 있는 "You said"나 "You" 뒤에 오는 공백이나 콜론까지 삭제
+    cleanText = cleanText.replace(/^(You said|You|Said|Question)[:\s]*/i, '');
+
+    // 3. 30자 제한
     btn.innerText = `${index + 1}. ${cleanText.substring(0, 30)}${cleanText.length > 30 ? '...' : ''}`;
     
     btn.onclick = (e) => {
